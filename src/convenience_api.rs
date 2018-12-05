@@ -1,10 +1,12 @@
 use ffi::{MediaInfo, MediaInfoResult, MediaInfoStream};
-use streams::{GeneralStream, VideoStream, AudioStream, ImageStream, MenuStream, OtherStream, TextStream};
+use streams::{
+    AudioStream, GeneralStream, ImageStream, MenuStream, OtherStream, TextStream, VideoStream,
+};
 
-use chrono::{UTC, DateTime};
-use std::rc::Rc;
+use chrono::{DateTime, UTC};
 use std::cell::RefCell;
 use std::path::Path;
+use std::rc::Rc;
 use std::time::Duration;
 
 pub struct MediaInfoWrapper {
@@ -48,16 +50,20 @@ impl MediaInfoWrapper {
             Ok(r) => {
                 self.wrap_streams();
                 Ok(r)
-            },
+            }
             Err(r) => Err(r),
         }
     }
 
-    pub fn open_data(&mut self, data: &[u8]) -> Result<(), String>{
+    pub fn open_data(&mut self, data: &[u8]) -> Result<(), String> {
         let data_len = data.len();
-        if data_len == 0 { return Err("Data length is 0".to_string()); }
+        if data_len == 0 {
+            return Err("Data length is 0".to_string());
+        }
 
-        self.handle.borrow_mut().open_buffer_init(data_len as u64, 0);
+        self.handle
+            .borrow_mut()
+            .open_buffer_init(data_len as u64, 0);
         let continue_result = self.handle.borrow_mut().open_buffer_continue(data);
         let finalize_result = self.handle.borrow_mut().open_buffer_finalize();
 
@@ -94,9 +100,9 @@ impl MediaInfoWrapper {
                             index: i,
                             handler: Rc::clone(&self.handle),
                         });
-                    };
+                    }
                     self.video_streams = Some(streams);
-                },
+                }
                 MediaInfoStream::Audio => {
                     let mut streams = Vec::new();
                     for i in 0..self.handle.borrow_mut().count_get(stype) {
@@ -105,9 +111,9 @@ impl MediaInfoWrapper {
                             index: i,
                             handler: Rc::clone(&self.handle),
                         });
-                    };
+                    }
                     self.audio_streams = Some(streams);
-                },
+                }
                 MediaInfoStream::Text => {
                     let mut streams = Vec::new();
                     for i in 0..self.handle.borrow_mut().count_get(stype) {
@@ -116,9 +122,9 @@ impl MediaInfoWrapper {
                             index: i,
                             handler: Rc::clone(&self.handle),
                         });
-                    };
+                    }
                     self.text_streams = Some(streams);
-                },
+                }
                 MediaInfoStream::Other => {
                     let mut streams = Vec::new();
                     for i in 0..self.handle.borrow_mut().count_get(stype) {
@@ -127,9 +133,9 @@ impl MediaInfoWrapper {
                             index: i,
                             handler: Rc::clone(&self.handle),
                         });
-                    };
+                    }
                     self.other_streams = Some(streams);
-                },
+                }
                 MediaInfoStream::Image => {
                     let mut streams = Vec::new();
                     for i in 0..self.handle.borrow_mut().count_get(stype) {
@@ -138,9 +144,9 @@ impl MediaInfoWrapper {
                             index: i,
                             handler: Rc::clone(&self.handle),
                         });
-                    };
+                    }
                     self.image_streams = Some(streams);
-                },
+                }
                 MediaInfoStream::Menu => {
                     let mut streams = Vec::new();
                     for i in 0..self.handle.borrow_mut().count_get(stype) {
@@ -149,9 +155,9 @@ impl MediaInfoWrapper {
                             index: i,
                             handler: Rc::clone(&self.handle),
                         });
-                    };
+                    }
                     self.menu_streams = Some(streams);
-                },
+                }
                 _ => continue,
             }
         }
@@ -179,6 +185,18 @@ impl MediaInfoWrapper {
 
     pub fn menu_streams(&self) -> Option<&Vec<MenuStream>> {
         self.menu_streams.as_ref()
+    }
+
+    pub fn is_video(&self) -> bool {
+        self.video_streams().is_some()
+    }
+
+    pub fn is_audio(&self) -> bool {
+        self.audio_streams().is_some()
+    }
+
+    pub fn is_image(&self) -> bool {
+        self.image_streams().is_some()
     }
 
     delegate! {
@@ -213,29 +231,43 @@ impl MediaInfoWrapper {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
     use chrono::NaiveDate;
     use std::fs;
+    use std::path::PathBuf;
 
     #[test]
     fn can_retrieve_general_information() {
         let sample_path = PathBuf::from("samples");
         let filename = sample_path.join("sample.mp4");
         let mut mw = MediaInfoWrapper::new();
-        mw.open(filename.as_path()).unwrap();
+        mw.open(filename.as_path()).expect("Sample should exists.");
 
-        assert_eq!("mp42", mw.codec_id().unwrap());
-        println!("CODECID");
-        assert_eq!(Duration::from_millis(5568), mw.duration().unwrap());
-        assert_eq!("MPEG-4", mw.format().unwrap());
-        assert_eq!("Base Media / Version 2", mw.format_profile().unwrap());
-        assert_eq!("MPEG-4", mw.codec().unwrap());
-        assert_eq!(551194, mw.overall_bit_rate().unwrap());
-        assert_eq!("HandBrake 0.9.4 2009112300", mw.writing_application().unwrap());
-        assert_eq!(160, mw.headersize().unwrap());
-        assert_eq!(379880, mw.datasize().unwrap());
-        assert_eq!(3591, mw.footersize().unwrap());
-        assert_eq!(DateTime::<UTC>::from_utc(NaiveDate::from_ymd(2010, 3, 20).and_hms(21, 29, 12), UTC), mw.tagged_date().unwrap());
+        assert_eq!("mp42", mw.codec_id().unwrap(), "codec_id");
+        assert_eq!(
+            Duration::from_millis(5568),
+            mw.duration().unwrap(),
+            "duration"
+        );
+        assert_eq!("MPEG-4", mw.format().unwrap(), "format");
+        assert_eq!(
+            "Base Media / Version 2",
+            mw.format_profile().unwrap(),
+            "format_profile"
+        );
+        assert_eq!(551194, mw.overall_bit_rate().unwrap(), "overall_bit_rate");
+        assert_eq!(
+            "HandBrake 0.9.4 2009112300",
+            mw.writing_application().unwrap(),
+            "writing_application"
+        );
+        assert_eq!(160, mw.headersize().unwrap(), "headersize");
+        assert_eq!(379880, mw.datasize().unwrap(), "datasize");
+        assert_eq!(3591, mw.footersize().unwrap(), "footersize");
+        assert_eq!(
+            DateTime::<UTC>::from_utc(NaiveDate::from_ymd(2010, 3, 20).and_hms(21, 29, 12), UTC),
+            mw.tagged_date().unwrap(),
+            "tagged_date"
+        );
         mw.close();
     }
 
@@ -245,7 +277,8 @@ mod tests {
         let filename = sample_path.join("sample.mp4");
         let mut mw = MediaInfoWrapper::new();
         let contents = fs::read(filename).expect("File not found.");
-        mw.open_data(contents.as_slice()).expect("Could not read from buffer.");
+        mw.open_data(contents.as_slice())
+            .expect("Could not read from buffer.");
 
         assert_eq!("mp42", mw.codec_id().unwrap());
     }
@@ -256,6 +289,10 @@ mod tests {
         let filename = sample_path.join("sample.mp4");
         let mut mw = MediaInfoWrapper::new();
         mw.open(filename.as_path()).unwrap();
+
+        assert_eq!(mw.is_video(), true);
+        assert_eq!(mw.is_audio(), true);
+        assert_eq!(mw.is_image(), true);
 
         let vstreams = match mw.video_streams() {
             Some(x) => x,
