@@ -188,15 +188,24 @@ impl MediaInfoWrapper {
     }
 
     pub fn is_video(&self) -> bool {
-        self.video_streams().is_some()
+        match self.video_streams() {
+            Some(streams) => !streams.is_empty(),
+            None => false,
+        }
     }
 
     pub fn is_audio(&self) -> bool {
-        self.audio_streams().is_some()
+        match self.audio_streams() {
+            Some(streams) => !streams.is_empty(),
+            None => false,
+        }
     }
 
     pub fn is_image(&self) -> bool {
-        self.image_streams().is_some()
+        match self.image_streams() {
+            Some(streams) => !streams.is_empty(),
+            None => false,
+        }
     }
 
     delegate! {
