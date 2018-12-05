@@ -1,8 +1,8 @@
-use ffi::{MediaInfo, MediaInfoInfo, MediaInfoResult, MediaInfoError, MediaInfoStream};
-use chrono::{UTC, DateTime, NaiveDateTime};
+use chrono::{DateTime, NaiveDateTime, UTC};
+use ffi::{MediaInfo, MediaInfoError, MediaInfoInfo, MediaInfoResult, MediaInfoStream};
 
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::rc::Rc;
 use std::time::Duration;
 
 macro_rules! stream_struct {
@@ -12,7 +12,7 @@ macro_rules! stream_struct {
             pub index: usize,
             pub handler: Rc<RefCell<MediaInfo>>,
         }
-    }
+    };
 }
 
 macro_rules! base_stream_implement {
@@ -30,7 +30,7 @@ macro_rules! base_stream_implement {
                 Some(&self.handler)
             }
         }
-    }
+    };
 }
 
 macro_rules! mediainfo_attr {
@@ -88,7 +88,7 @@ pub struct GeneralStream {
     pub handler: Option<Rc<RefCell<MediaInfo>>>,
 }
 
-pub trait BaseStream {
+trait BaseStream {
     fn stream_type(&self) -> MediaInfoStream;
     fn index(&self) -> usize;
     fn handler(&self) -> Option<&Rc<RefCell<MediaInfo>>>;
@@ -96,7 +96,7 @@ pub trait BaseStream {
     fn result_to_duration(&self, result: MediaInfoResult<String>) -> MediaInfoResult<Duration> {
         match result?.parse::<u64>() {
             Ok(x) => Ok(Duration::from_millis(x)),
-            Err(_) =>Err(MediaInfoError::NonNumericResultError),
+            Err(_) => Err(MediaInfoError::NonNumericResultError),
         }
     }
 
@@ -173,7 +173,7 @@ impl GeneralStream {
     mediainfo_date!(tagged_date, "Tagged_Date");
 
     pub fn writing_application(&self) -> MediaInfoResult<String> {
-       match self.encoded_application() {
+        match self.encoded_application() {
             Ok(x) => Ok(x),
             Err(_) => self.encoded_application_string(),
         }
@@ -191,7 +191,7 @@ impl VideoStream {
     pub fn cbr(&self) -> bool {
         match self.bit_rate_mode() {
             Ok(x) => x == "Constant",
-            Err(_) => false
+            Err(_) => false,
         }
     }
 
@@ -205,7 +205,7 @@ impl VideoStream {
     pub fn interlaced(&self) -> bool {
         match self.scan_type() {
             Ok(x) => x == "Interlaced",
-            Err(_) => false
+            Err(_) => false,
         }
     }
 
@@ -283,14 +283,14 @@ impl AudioStream {
     pub fn stereo(&self) -> bool {
         match self.channels() {
             Ok(x) => x == 2,
-            Err(_) => false
+            Err(_) => false,
         }
     }
 
     pub fn mono(&self) -> bool {
         match self.channels() {
             Ok(x) => x == 1,
-            Err(_) => false
+            Err(_) => false,
         }
     }
 

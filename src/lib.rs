@@ -7,7 +7,7 @@ extern crate delegate;
 mod c_w_string;
 mod convenience_api;
 mod ffi;
-mod streams;
+pub mod streams;
 
 pub type MediaInfoWrapper = convenience_api::MediaInfoWrapper;
 pub type MediaInfo = ffi::MediaInfo;
